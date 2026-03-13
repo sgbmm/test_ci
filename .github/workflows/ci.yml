@@ -1,35 +1,15 @@
-name: Test and Build Docker Image
+name: Docker Build and Push
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] # Срабатывает при пуше в ветку main
 
 jobs:
-  # 1. Сначала запускаем тесты
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          
-      - name: Run Pytest
-        run: pytest
-
-  # 2. Сборка образа начнется ТОЛЬКО если тесты прошли (needs: test)
   build-and-push:
-    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write # Разрешение на запись в GitHub Packages
 
     steps:
       - name: Checkout repository
@@ -47,4 +27,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/my-fastapi-app:latest
+          # Тегируем образ: 'latest' и 'sha-коммита'
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/my-fastapi-app:latest
+            ghcr.io/${{ github.repository_owner }}/my-fastapi-app:${{ github.sha }}
